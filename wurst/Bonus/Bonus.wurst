@@ -162,7 +162,7 @@ public abstract class Bonus
 	protected static constant ID_GEN = new IdGenerator('xx00')
 	
 	static function generateId() returns int
-		return generateId()
+		return ID_GEN.next()
 
     protected string name
     protected int minBonus = 0

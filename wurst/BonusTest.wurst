@@ -9,7 +9,7 @@ init
     let u = createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
     let w = createUnit(Player(0), 'hpea', vec2(0, 0), angle(0))
     let f = createUnit(Player(0), 'hfoo', vec2(0, 0), angle(0))
-	new HashMap<real, real>
+    new HashMap<real, real>
     w.addBonus(BONUS.damageBase, 100)
     f.addBonus(BONUS.damageBase, 100)
     createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
@@ -17,15 +17,16 @@ init
 
     bonusData('I000')
     ..addBonus(BONUS.damageBase, 10)
-	..addBonus(BONUS.attackSpeed, 100)
-	..addBonus(BONUS.bash1sec, 5)
+    ..addBonus(BONUS.attackSpeed, 100)
+    ..addBonus(BONUS.bash1sec, 5)
     ..addBonus(BONUS.agility, 100)
     ..addBonus(BONUS.agilityBase, 15)
-	..addBonus(BONUS.moveSpeed, 50)
-	
+    ..addBonus(BONUS.moveSpeed, 50)
+    ..addBonus(BONUS.bash2sec, 3)
+    
     u.addBonus(BONUS.damage, -256)
     u.addBonus(BONUS.armor, -256)
 
-	doPeriodically(1, (CallbackPeriodic _cb) -> begin 
-		print(u.getMoveSpeed())
-	end)
+    doPeriodically(1, (CallbackPeriodic _cb) -> begin 
+        print(u.getMoveSpeed())
+    end)

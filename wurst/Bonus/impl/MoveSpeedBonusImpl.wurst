@@ -2,7 +2,6 @@ package MoveSpeedBonusImpl
 import AbilityObjEditing
 import Bonus
 import OnUnitEnterLeave
-import UnitBonus
 
 int minSpeed = 0
 Bonus thisBonus
