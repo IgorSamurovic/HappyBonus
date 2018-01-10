@@ -1,7 +1,8 @@
 package Bonus
 import HashMap
-import ChannelAbilityPreset
 import initlater BonusTypes
+import ObjectIdGenerator
+import AbilityObjEditing
 
 /* This is the main API package used for Bonus. Do not import any other file in this folder! */
 
@@ -19,12 +20,55 @@ public function Bonus.getImplementation() returns BonusBase
 
 /** Sets the implementation for this bonus type */
 public function Bonus.setImplementation(BonusBase typ)
-    let id = this castTo int
-    if impl[id] == null
-        impl[id] = typ
-    else
-        Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
+    if typ != null
+        let id = this castTo int
+        if impl[id] == null
+            impl[id] = typ
+        else
+            Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
 
+/** Sets the implementation for this bonus type if doImpl is true */
+public function Bonus.setImplementation(bool doImpl, BonusBase typ)
+    if doImpl
+        let id = this castTo int
+        if impl[id] == null
+            impl[id] = typ
+        else
+            Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
+
+public class BonusSettings
+    static constant none = new BonusSettings()..dontImpl()
+    string name
+    int min
+	int max
+	int resolution = 1
+    bool doImpl = true
+
+    function dontImpl()
+        doImpl = false
+
+	construct(string name, int min, int max, int resolution)
+        this.name = name
+        this.min = min
+        this.max = max
+		this.resolution = resolution
+
+    construct(string name, int min, int max)
+        this.name = name
+        this.min = min
+        this.max = max
+
+    construct(string name, int range)
+        this.name = name
+        this.min = -range
+        this.max =  range
+
+	construct(string name)
+		this.name = name
+		this.min = -1000000
+		this.max =  1000000
+		
+    construct()
 
 public interface BonusMapI
     function getMap() returns IterableMap<BonusBase, int>
@@ -32,7 +76,7 @@ public interface BonusMapI
     function remove(BonusMapI that)
 
 public class BonusMap<T> implements BonusMapI
-    protected IterableMap<BonusBase, int> bonusMap 
+    protected IterableMap<BonusBase, int> bonusMap
     protected HashMap<T, thistype> instanceMap
     protected T mapRef
 
@@ -50,7 +94,7 @@ public class BonusMap<T> implements BonusMapI
         for bonus in map
             remove(bonus, map.get(bonus))
             //print(bonus.getName() + " " + map.get(bonus).toString())
-            
+
     function add(Bonus bonusId, int val)
         let typ = bonusId.getImplementation()
         if typ != null
@@ -103,7 +147,7 @@ public interface BonusBaseChangeClosure
     function run(unit u, int current, int bonus)
 
 /** Every bonus type the user wants to add to the system must extend this class */
-public abstract class BonusBase 
+public abstract class BonusBase
     protected string name
     protected int minBonus = 0
     protected int maxBonus = 1
@@ -112,7 +156,7 @@ public abstract class BonusBase
     function getName() returns string
         return name
 
-    /** Sets the minimum bonus value to a nonpositive number */ 
+    /** Sets the minimum bonus value to a nonpositive number */
     protected function setMinBonus(int val)
         minBonus = min(0, val)
 
@@ -144,7 +188,7 @@ public abstract class BonusBase
 interface ExponentialAbilityBonusClosure
     function run(int id, int value)
 
-/** Ability bonus that relies on having positive exponential increments (2, 4, 8, etc) 
+/** Ability bonus that relies on having positive exponential increments (2, 4, 8, etc)
 and one negative decrement */
 public class ExponentialAbilityBonus extends BonusBase
     protected static int array pow2 = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
@@ -172,35 +216,34 @@ public class ExponentialAbilityBonus extends BonusBase
 
     protected function enable(int power)
         needToAdd -= pow2[power]
+        print("OBJ NAME: " + GetObjectName(abils[power]))
         affectedUnit.addAbility(abils[power])
-                
+
     protected function disable(int power)
         affectedUnit.removeAbility(abils[power])
 
     protected function enableNegative()
         affectedUnit.addAbility(abilNegative)
-                
+
     protected function disableNegative()
         affectedUnit.removeAbility(abilNegative)
 
-    construct(string name, int min, int max, ExponentialAbilityBonusClosure processFunction)
-        /* Initialization block */
-        super(name)
+    function constructor(int min, int max, ExponentialAbilityBonusClosure processFunction)
         this.maxPower = getPower(max)
         this.maxBonus = max(0, max)
         this.minBonus = min(0, min)
 
-        for power = 0 to maxPower 
+        for power = 0 to maxPower
             let id = BONUS_ID_GEN.next()
             abils[power] = id
             processFunction.run(id, pow2[power])
-        
+
         if min < 0
             abilNegative = BONUS_ID_GEN.next()
             processFunction.run(abilNegative, -pow2[maxPower])
 
         /* Define the change function */
-        changeClosure = (unit u, int current, int bonus) -> begin 
+        changeClosure = (unit u, int current, int bonus) -> begin
             this.affectedUnit = u
             var shouldAddNegative = false
             if bonus != 0
@@ -219,12 +262,20 @@ public class ExponentialAbilityBonus extends BonusBase
                     for power = maxPower downto 0
                         if needToAdd >= pow2[power]
                             enable(power)
-                        else 
+                        else
                             disable(power)
-                    
+
                     if shouldAddNegative
                         enableNegative()
         end
+        
+    construct(string name, int min, int max, ExponentialAbilityBonusClosure processFunction)
+        super(name)
+        constructor(min, max, processFunction)
+       
+    construct(BonusSettings settings, ExponentialAbilityBonusClosure processFunction)
+        super(settings.name)
+        constructor(settings.min, settings.max, processFunction)
 
 /* Ability Level Bonus */
 
@@ -249,22 +300,24 @@ public class AbilityLevelBonus extends BonusBase
         this.abilId = abilId
 
         /* Define the change function */
-        changeClosure = (unit u, int current, int bonus) -> begin 
+        changeClosure = (unit u, int current, int bonus) -> begin
             let targetLvl = clamp(current + bonus) div bonusToLevel
             if targetLvl > 0
                 if current > 0 or forceAdd
                     if not u.hasAbility(abilId)
                         u.addAbility(abilId)
-                        print("ADDED ABIL " + GetObjectName(abilId))
                     u.setAbilityLevel(abilId, targetLvl)
             else
                 u.removeAbility(abilId)
         end
 
+	construct(string name)
+		super(name)
+
     construct(string name, int maxLevel, bool forceAdd, int abilId)
         super(name)
         constructor(maxLevel, forceAdd, abilId)
- 
+
     construct(string name, int maxLevel, bool forceAdd, bool visible, AbilityDefinition def)
         super(name)
         if not visible
@@ -275,15 +328,34 @@ public class AbilityLevelBonus extends BonusBase
             ..setButtonPositionTurnOffY(-11)
         constructor(maxLevel, forceAdd, def.getNewId())
 
+/* Ability Bonus */
+
+/** Essentially the same as AbilityLevelBonus, but it uses one ability, and one level.
+This class is useful for creating an ability that's possible to get from multiple sources,
+but when one source of it is removed, the ability will remain on the unit. */
+public class AbilityBonus extends AbilityLevelBonus
+
+    construct(string name, bool visible, AbilityDefinition def)
+        super(name, 1, true, visible, def)
+
+    construct(string name, int abilId)
+        super(name, 1, true, abilId)
+
 /* Code Bonus */
 
 /** This type of Bonus depends on the user specifying a closure to be ran when the bonus is
-    increased or dcreased.
-    Example: Attribute (STR/AGI/INT) bonuses use this feature in the default implementation. */
+increased or decreased.
+Example: Attribute (STR/AGI/INT) bonuses use this feature in the default implementation. */
 public class CodeBonus extends BonusBase
 
     construct(string name, int min, int max, BonusBaseChangeClosure changeClosure)
         super(name)
         setMinBonus(min)
         setMaxBonus(max)
+        setChangeClosure(changeClosure)
+        
+    construct(BonusSettings bs, BonusBaseChangeClosure changeClosure)
+        super(bs.name)
+        setMinBonus(bs.min)
+        setMaxBonus(bs.max)
         setChangeClosure(changeClosure)

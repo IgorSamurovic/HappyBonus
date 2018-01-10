@@ -1,7 +1,7 @@
 package UnitBonus
 import Bonus
 import UnitIndexer
-import BonusTypes
+import initlater BonusTypes
 
 constant unitBonus = new BonusMap<unit>
 
@@ -21,7 +21,7 @@ public function unit.removeBonus(Bonus typ, int val)
 public function unit.addBonus(BonusBase typ, int val)
     let map = this.getBonusMap()
     let current = map.get(typ)
-    print(current.toString() + " " + val.toString())
+    print("[" + typ.getName() + "] Current: " + current.toString() + " Added: " + val.toString())
     typ.change(this, current, val)
     map.add(typ, val)
     

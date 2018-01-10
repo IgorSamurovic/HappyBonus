@@ -1,0 +1,43 @@
+package MoveSpeedBonusImpl
+import AbilityObjEditing
+import Bonus
+import OnUnitEnterLeave
+import UnitBonus
+
+int minSpeed = 0
+BonusBase thisBonus
+
+public class MoveSpeedBonus extends AbilityLevelBonus
+
+    construct(string name, int min, int max, int resolution)
+        super(name)
+        thisBonus = this	
+        setMinBonus(min)
+        setMaxBonus(max)
+        minSpeed = min
+        setBonusToLevel(resolution)
+
+        let levels = (max - min) div bonusToLevel
+        this.abilId = new AbilityDefinitionMoveSpeedBonus(BONUS_ID_GEN.next())
+            ..setLevels(levels)
+            ..presetMovementSpeedBonus((int lvl) -> min + (lvl - 1) * bonusToLevel)
+        .getNewId()
+
+        /* Define the change function */
+        changeClosure = (unit u, int current, int bonus) -> begin
+            let targetLvl = clamp(current + bonus)
+            if targetLvl > 0
+                if not u.hasAbility(abilId)
+                    u.addAbility(abilId)
+                // +1 compensates for the fact that lvl 1 gives base amount of movement speed (0-150 usually)
+                u.setAbilityLevel(abilId, (targetLvl div bonusToLevel) + 1)
+            else
+                u.setAbilityLevel(abilId, 1)
+        end
+
+        if not compiletime
+            onEnter(() -> begin
+                let u = getEnterLeaveUnit()
+                u.setMoveSpeed(0)
+                u.addBonus(thisBonus, (GetUnitDefaultMoveSpeed(u) - minSpeed).toInt())
+            end)

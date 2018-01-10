@@ -2,7 +2,6 @@ package BaseDamageBonusImpl
 import AbilityObjEditing
 import ItemObjEditing
 import Bonus
-import initlater BonusTypes
 import ObjectIds
 
 public class BaseDamageBonus extends BonusBase
@@ -18,13 +17,12 @@ public class BaseDamageBonus extends BonusBase
             u.addAbility(testAbil)
         SetItemVisible(bonusItem[id], true)
         UnitAddItem(u, bonusItem[id])
-        print(bonusItem[id].getPos().distanceTo(u.getPos()))
         SetItemVisible(bonusItem[id], false)
         if not hasInv
             u.removeAbility(testAbil)
 
-    construct()
-        super("Damage")
+    construct(string name)
+        super(name)
 
         var i = 0
         while (bonusVal[i] != 0)
@@ -56,9 +54,3 @@ public class BaseDamageBonus extends BonusBase
                         addBonus(u, c)
                         toAdd -= bonusVal[c]
         end
-
-init
-    initialize()
-
-@compiletime function initialize()
-    Bonus.BaseDamage.setImplementation(new BaseDamageBonus)
