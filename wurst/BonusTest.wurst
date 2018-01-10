@@ -1,0 +1,34 @@
+package BonusTest
+import BonusTypes
+import UnitBonus
+import ItemBonus
+
+init
+    let g = CreateGroup()
+    let u = createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
+    let w = createUnit(Player(0), 'hpea', vec2(0, 0), angle(0))
+    let f = createUnit(Player(0), 'hfoo', vec2(0, 0), angle(0))
+
+    w.addBonus(Bonus.BaseDamage, 100)
+    f.addBonus(Bonus.BaseDamage, 100)
+    createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
+    g.addUnit(u)
+
+    bonusData('I000')
+        ..addBonus(Bonus.BaseDamage, 10)
+        ..addBonus(Bonus.AttackSpeed, 50)
+        ..addBonus(Bonus.AGI, 10)
+        ..addBonus(Bonus.Crit5x, 3)
+
+    //u.addBonus(Bonus.Damage, -256)
+    u.addBonus(Bonus.Armor, -256)
+    /*
+    u.addBonus(BonusType.MP_REGEN, -5)
+    u.addBonus(BonusType.STRENGTH, 300)
+    u.addBonus(BonusType.STRENGTH_BASE, 300)
+    u.addBonus(BonusType.STRENGTH, 300)
+    u.addBonus(BonusType.STRENGTH_BASE, 300)
+    u.removeBonus(BonusType.STRENGTH, 600)
+    u.removeBonus(BonusType.STRENGTH_BASE, 600)
+    u.removeBonus(BonusType.DAMAGE, 5)*/
+

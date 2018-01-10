@@ -1,0 +1,64 @@
+package BaseDamageBonusImpl
+import AbilityObjEditing
+import ItemObjEditing
+import Bonus
+import initlater BonusTypes
+import ObjectIds
+
+public class BaseDamageBonus extends BonusBase
+    static constant testAbil = 'AInv'
+    static int array bonusVal = [100, 10, 1, -100, -10, -1]
+    static int array bonusAbilId
+    static int array bonusItemId
+    static item array bonusItem
+
+    function addBonus(unit u, int id)
+        let hasInv = u.hasAbility(testAbil)
+        if not hasInv 
+            u.addAbility(testAbil)
+        SetItemVisible(bonusItem[id], true)
+        UnitAddItem(u, bonusItem[id])
+        print(bonusItem[id].getPos().distanceTo(u.getPos()))
+        SetItemVisible(bonusItem[id], false)
+        if not hasInv
+            u.removeAbility(testAbil)
+
+    construct()
+        super("Damage")
+
+        var i = 0
+        while (bonusVal[i] != 0)
+            let abilId = BONUS_ID_GEN.next()
+            bonusAbilId[abilId] = abilId
+            new AbilityDefinitionAttackMod(abilId)
+                ..setAttackModification(1, bonusVal[i])
+                ..setArtCaster("")
+            let itemId = BONUS_ID_GEN.next()
+            bonusAbilId[itemId] = itemId
+            new ItemDefinition(itemId, 'tkno')
+                ..setAbilities(int2fourchar(abilId))
+            if not compiletime
+                bonusItem[i] = createItem(itemId, vec2(0, 0))
+                SetItemVisible(bonusItem[i], false)
+            i++
+
+        changeClosure = (unit u, int _current, int bonus) -> begin 
+            var toAdd = bonus
+            
+            if bonus > 0
+                for c = 0 to 2
+                    while toAdd >= bonusVal[c]
+                        addBonus(u, c)
+                        toAdd -= bonusVal[c]
+            else
+                for c = 3 to 5
+                    while toAdd <= bonusVal[c]
+                        addBonus(u, c)
+                        toAdd -= bonusVal[c]
+        end
+
+init
+    initialize()
+
+@compiletime function initialize()
+    Bonus.BaseDamage.setImplementation(new BaseDamageBonus)

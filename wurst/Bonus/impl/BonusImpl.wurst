@@ -1,0 +1,85 @@
+package BonusImpl
+import AbilityObjEditing
+import Bonus
+import BonusTypes
+
+init
+    initialize()
+
+@compiletime function initialize()
+    Bonus.Damage.setImplementation(new ExponentialAbilityBonus("Damage", -2048, 2048, (int id, int val) -> begin
+        new AbilityDefinitionAttackBonusPlus1(id)..setAttackBonus(1, val)
+    end))
+
+    Bonus.AttackSpeed.setImplementation(new ExponentialAbilityBonus("Attack speed", -2048, 2048, (int id, int val) -> begin
+        new AbilityDefinitionAttackSpeedIncrease(id)..setAttackSpeedIncrease(1, val * 0.01)
+    end))
+
+    Bonus.Armor.setImplementation(new ExponentialAbilityBonus("Armor", -2048, 2048, (int id, int val) -> begin
+        new AbilityDefinitionDefenseBonusPlus1(id)..setDefenseBonus(1, val)
+    end))
+
+    Bonus.HP.setImplementation(new ExponentialAbilityBonus("HP", -2048, 2048, (int id, int val) -> begin
+        new AbilityDefinitionMaxLifeBonusGreater(id)..setMaxLifeGained(1, val)
+    end))
+
+    Bonus.MP.setImplementation(new ExponentialAbilityBonus("MP", -2048, 2048, (int id, int val) -> begin
+        new AbilityDefinitionMaxManaBonusMost(id)..setMaxManaGained(1, val)
+    end))
+    
+    Bonus.STR.setImplementation(new CodeBonus("Strength", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroStr(u, GetHeroStr(u, true) + bonus, false)
+    end))
+
+    Bonus.AGI.setImplementation(new CodeBonus("Agility", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroAgi(u, GetHeroAgi(u, true) + bonus, false)
+    end))
+
+    Bonus.INT.setImplementation(new CodeBonus("Intelligence", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroInt(u, GetHeroInt(u, true) + bonus, false)
+    end))
+
+    Bonus.STRBase.setImplementation(new CodeBonus("Strength", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroStr(u, GetHeroStr(u, false) + bonus, true)
+    end))
+
+    Bonus.AGIBase.setImplementation(new CodeBonus("Agility", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroAgi(u, GetHeroAgi(u, false) + bonus, true)
+    end))
+
+    Bonus.INTBase.setImplementation(new CodeBonus("Intelligence", -2048, 2048, (unit u, int _current, int bonus) -> begin
+        SetHeroInt(u, GetHeroInt(u, false) + bonus, true)
+    end))
+
+    Bonus.HPRegen.setImplementation(new ExponentialAbilityBonus("HP regen", -256, 256, (int id, int val) -> begin
+        new AbilityDefinitionRegenLifeArll(id)..setHitPointsRegeneratedPerSecond(1, val)
+    end))
+
+    Bonus.Evasion.setImplementation(new AbilityLevelBonus("Evasion", 10, true,
+        new AbilityDefinitionEvasioncreep(BONUS_ID_GEN.next())
+            ..presetChancetoEvade((int lvl) -> lvl * 0.1)
+        .getNewId()))
+
+    Bonus.Crit2x.setImplementation(new AbilityLevelBonus("chance of 2x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 2)))
+
+    Bonus.Crit3x.setImplementation(new AbilityLevelBonus("chance of 3x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 3)))
+
+    Bonus.Crit4x.setImplementation(new AbilityLevelBonus("chance of 4x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 4)))
+
+    Bonus.Crit5x.setImplementation(new AbilityLevelBonus("chance of 5x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 5)))

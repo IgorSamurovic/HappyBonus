@@ -1,0 +1,54 @@
+package ItemBonus
+import Bonus
+import BonusTypes
+import RegisterEvents
+import UnitBonus
+
+constant objdataBonus = new BonusMap<bonusData>
+
+public tuple bonusData(int id)
+
+public function bonusDataToIndex(bonusData bi) returns int
+    return bi.id
+
+public function bonusDataFromIndex(int id) returns bonusData
+    return bonusData(id)
+
+public function bonusData.getBonusMap() returns BonusMap<bonusData>
+    return objdataBonus.of(this)
+
+public function bonusData.getBonus(BonusBase typ) returns int
+    return this.getBonusMap().get(typ)
+
+public function bonusData.addBonus(Bonus typ, int val)
+    this.addBonus(typ.getImplementation(), val)
+
+public function bonusData.removeBonus(Bonus typ, int val)
+    this.removeBonus(typ.getImplementation(), val)
+
+public function bonusData.addBonus(BonusBase typ, int val)
+    this.getBonusMap().add(typ, val)
+
+public function bonusData.removeBonus(BonusBase typ, int val)
+    this.getBonusMap().remove(typ, val)
+
+function unit.addItemBonuses(item i)
+    let id = i.getTypeId()
+    let map = objdataBonus.of(bonusData(id)).getMap()
+    for bonus in map
+        this.addBonus(bonus, map.get(bonus))
+
+function unit.removeItemBonuses(item i)
+    let id = i.getTypeId()
+    let map = objdataBonus.of(bonusData(id)).getMap()
+    for bonus in map
+        this.removeBonus(bonus, map.get(bonus))
+
+init
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_PICKUP_ITEM, () -> begin
+        GetTriggerUnit().addItemBonuses(GetManipulatedItem())
+    end)
+
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DROP_ITEM, () -> begin
+        GetTriggerUnit().removeItemBonuses(GetManipulatedItem())
+    end)

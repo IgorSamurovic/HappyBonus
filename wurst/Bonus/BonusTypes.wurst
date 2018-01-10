@@ -1,0 +1,31 @@
+package BonusTypes
+
+public enum Bonus
+    Ability
+    Damage
+    BaseDamage
+    AttackSpeed
+    Armor
+    HP
+    MP
+    STR
+    AGI
+    INT
+    STRBase
+    AGIBase
+    INTBase
+    HPRegen
+    
+    /* Complex bonuses */
+    MPRegen
+    HPRegenPercent
+    MPRegenPercent
+    MoveSpeed
+
+    /* Chance Effects */
+    Evasion
+    Bash
+    Crit2x
+    Crit3x
+    Crit4x
+    Crit5x

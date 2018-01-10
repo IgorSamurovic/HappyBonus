@@ -1,0 +1,32 @@
+package UnitBonus
+import Bonus
+import UnitIndexer
+import BonusTypes
+
+constant unitBonus = new BonusMap<unit>
+
+public function unit.getBonusMap() returns BonusMap<unit>
+    return unitBonus.of(this)
+
+/** Returns the int value of a specific bonus for this unit */
+public function unit.getBonus(BonusBase typ) returns int
+    return this.getBonusMap().get(typ)
+
+public function unit.addBonus(Bonus typ, int val)
+    this.addBonus(typ.getImplementation(), val)
+
+public function unit.removeBonus(Bonus typ, int val)
+    this.addBonus(typ, -val)
+
+public function unit.addBonus(BonusBase typ, int val)
+    let map = this.getBonusMap()
+    let current = map.get(typ)
+    print(current.toString() + " " + val.toString())
+    typ.change(this, current, val)
+    map.add(typ, val)
+    
+public function unit.removeBonus(BonusBase typ, int val)
+    this.addBonus(typ, -val)
+
+init
+    onUnitDeindex(() -> destroy getDeindexedUnit().getBonusMap())

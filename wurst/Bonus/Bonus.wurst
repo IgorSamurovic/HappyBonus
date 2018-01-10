@@ -1,0 +1,289 @@
+package Bonus
+import HashMap
+import ChannelAbilityPreset
+import initlater BonusTypes
+
+/* This is the main API package used for Bonus. Do not import any other file in this folder! */
+
+/** In order to avoid ID clashes, use this ID generator for every object generated for this system */
+public constant BONUS_ID_GEN = new IdGenerator('xx00')
+
+BonusBase array impl
+
+/** Returns an implementation of this bonus type */
+public function Bonus.getImplementation() returns BonusBase
+    let retVal = impl[this castTo int]
+    if retVal == null
+        Log.error("Bonus with ID " + this castTo int.toString() + " not implemented!")
+    return retVal
+
+/** Sets the implementation for this bonus type */
+public function Bonus.setImplementation(BonusBase typ)
+    let id = this castTo int
+    if impl[id] == null
+        impl[id] = typ
+    else
+        Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
+
+
+public interface BonusMapI
+    function getMap() returns IterableMap<BonusBase, int>
+    function add(BonusMapI that)
+    function remove(BonusMapI that)
+
+public class BonusMap<T> implements BonusMapI
+    protected IterableMap<BonusBase, int> bonusMap 
+    protected HashMap<T, thistype> instanceMap
+    protected T mapRef
+
+    function getMap() returns IterableMap<BonusBase, int>
+        return bonusMap
+
+    function add(BonusMapI that)
+        let map = that.getMap()
+        for bonus in map
+            add(bonus, map.get(bonus))
+            //print(bonus.getName() + " " + map.get(bonus).toString())
+
+    function remove(BonusMapI that)
+        let map = that.getMap()
+        for bonus in map
+            remove(bonus, map.get(bonus))
+            //print(bonus.getName() + " " + map.get(bonus).toString())
+            
+    function add(Bonus bonusId, int val)
+        let typ = bonusId.getImplementation()
+        if typ != null
+            add(typ, val)
+
+    function add(BonusBase typ, int val)
+        if typ != null and val != 0
+            let current = bonusMap.get(typ)
+            bonusMap.put(typ, current + val)
+
+    function remove(Bonus bonusId, int val)
+        add(bonusId, -val)
+
+    function remove(BonusBase typ, int val)
+        add(typ, -val)
+
+    /** Returns a value of the given bonus */
+    function get(BonusBase typ) returns int
+        return bonusMap.get(typ)
+
+    function get(Bonus baseId) returns int
+        return bonusMap.get(baseId.getImplementation())
+
+    /** Returns the Bonuses instance associated with the given unit */
+    function of(T t) returns BonusMap<T>
+        var instance = (1 castTo thistype).instanceMap.get(t)
+        if instance == null
+            instance = new BonusMap(t)
+        return instance
+
+    /** This constructor should only be used once, to create an instnce to be used
+    as a pretend static member. */
+    construct()
+        if this castTo int == 1
+            instanceMap = new HashMap<T, thistype>
+
+    /** Creates a bonus map that's attached to an object of type T */
+    construct(T t)
+        mapRef = t
+        bonusMap = new IterableMap<BonusBase, int>
+        (1 castTo thistype).instanceMap.put(t, this)
+
+    ondestroy
+        destroy bonusMap
+        if mapRef != null
+            instanceMap.remove(mapRef)
+
+/** This closure is executed every time a bonus is changed */
+public interface BonusBaseChangeClosure
+    function run(unit u, int current, int bonus)
+
+/** Every bonus type the user wants to add to the system must extend this class */
+public abstract class BonusBase 
+    protected string name
+    protected int minBonus = 0
+    protected int maxBonus = 1
+    protected BonusBaseChangeClosure changeClosure
+
+    function getName() returns string
+        return name
+
+    /** Sets the minimum bonus value to a nonpositive number */ 
+    protected function setMinBonus(int val)
+        minBonus = min(0, val)
+
+    /** Sets the maximum bonus value to a nonnegative number */
+    protected function setMaxBonus(int val)
+        maxBonus = max(1, val)
+
+    protected function setChangeClosure(BonusBaseChangeClosure val)
+        changeClosure = val
+
+    /** Clamps the value to be within limits set in minBonus and maxBonus fields */
+    protected function clamp(int val) returns int
+        int retVal = val
+        if val < minBonus
+            retVal = minBonus
+        else if val > maxBonus
+            retVal = maxBonus
+        return retVal
+
+    function change(unit u, int current, int bonus)
+        changeClosure.run(u, current, bonus)
+
+    construct(string name)
+        this.name = name
+
+/* Exponential Ability Bonus */
+
+/** A closure that provides id and value for ability-based bonuses */
+interface ExponentialAbilityBonusClosure
+    function run(int id, int value)
+
+/** Ability bonus that relies on having positive exponential increments (2, 4, 8, etc) 
+and one negative decrement */
+public class ExponentialAbilityBonus extends BonusBase
+    protected static int array pow2 = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+                                       65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608]
+    protected int maxPower
+    protected int array[100] abils
+    protected int abilNegative
+
+    /** Gets the power of two necessary to cover the given value */
+    protected function getPower(int max) returns int
+        var power = 0
+        var maxVal = 1
+        for i = 0 to 24
+            maxVal += pow2[power]
+            if maxVal > max
+                break
+            else
+                power++
+        return power
+
+    /* Functionalities used during the change call */
+
+    protected unit affectedUnit
+    protected int needToAdd
+
+    protected function enable(int power)
+        needToAdd -= pow2[power]
+        affectedUnit.addAbility(abils[power])
+                
+    protected function disable(int power)
+        affectedUnit.removeAbility(abils[power])
+
+    protected function enableNegative()
+        affectedUnit.addAbility(abilNegative)
+                
+    protected function disableNegative()
+        affectedUnit.removeAbility(abilNegative)
+
+    construct(string name, int min, int max, ExponentialAbilityBonusClosure processFunction)
+        /* Initialization block */
+        super(name)
+        this.maxPower = getPower(max)
+        this.maxBonus = max(0, max)
+        this.minBonus = min(0, min)
+
+        for power = 0 to maxPower 
+            let id = BONUS_ID_GEN.next()
+            abils[power] = id
+            processFunction.run(id, pow2[power])
+        
+        if min < 0
+            abilNegative = BONUS_ID_GEN.next()
+            processFunction.run(abilNegative, -pow2[maxPower])
+
+        /* Define the change function */
+        changeClosure = (unit u, int current, int bonus) -> begin 
+            this.affectedUnit = u
+            var shouldAddNegative = false
+            if bonus != 0
+                needToAdd = clamp(current + bonus)
+                if needToAdd == 0
+                    disableNegative()
+                    for power = 0 to maxPower
+                        disable(power)
+                else
+                    if needToAdd < 0
+                        shouldAddNegative = true
+                        needToAdd -= minBonus
+                    else
+                        disableNegative()
+
+                    for power = maxPower downto 0
+                        if needToAdd >= pow2[power]
+                            enable(power)
+                        else 
+                            disable(power)
+                    
+                    if shouldAddNegative
+                        enableNegative()
+        end
+
+/* Ability Level Bonus */
+
+public class AbilityLevelBonus extends BonusBase
+    protected int abilId
+    protected int bonusToLevel = 1
+    protected bool forceAdd = false
+
+    function getAbilId() returns int
+        return abilId
+
+    /** Sets the number of points that get converted to one level. A setting of 5 means that for every 5 points
+    of the bonus, the unit gains one level of the ability.
+    This field is equal to 1 by default. */
+    protected function setBonusToLevel(int val)
+        bonusToLevel = val
+
+    function constructor(int maxLevel, bool forceAdd, int abilId)
+        setMinBonus(0)
+        setMaxBonus(maxLevel)
+        this.forceAdd = forceAdd
+        this.abilId = abilId
+
+        /* Define the change function */
+        changeClosure = (unit u, int current, int bonus) -> begin 
+            let targetLvl = clamp(current + bonus) div bonusToLevel
+            if targetLvl > 0
+                if current > 0 or forceAdd
+                    if not u.hasAbility(abilId)
+                        u.addAbility(abilId)
+                        print("ADDED ABIL " + GetObjectName(abilId))
+                    u.setAbilityLevel(abilId, targetLvl)
+            else
+                u.removeAbility(abilId)
+        end
+
+    construct(string name, int maxLevel, bool forceAdd, int abilId)
+        super(name)
+        constructor(maxLevel, forceAdd, abilId)
+ 
+    construct(string name, int maxLevel, bool forceAdd, bool visible, AbilityDefinition def)
+        super(name)
+        if not visible
+            def
+            ..setButtonPositionNormalX(0)
+            ..setButtonPositionNormalY(-11)
+            ..setButtonPositionTurnOffX(0)
+            ..setButtonPositionTurnOffY(-11)
+        constructor(maxLevel, forceAdd, def.getNewId())
+
+/* Code Bonus */
+
+/** This type of Bonus depends on the user specifying a closure to be ran when the bonus is
+    increased or dcreased.
+    Example: Attribute (STR/AGI/INT) bonuses use this feature in the default implementation. */
+public class CodeBonus extends BonusBase
+
+    construct(string name, int min, int max, BonusBaseChangeClosure changeClosure)
+        super(name)
+        setMinBonus(min)
+        setMaxBonus(max)
+        setChangeClosure(changeClosure)
