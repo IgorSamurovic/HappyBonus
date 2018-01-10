@@ -1,168 +1,143 @@
 package BonusImpl
 import AbilityObjEditing
 import Bonus
-import initlater BonusTypes
 import BaseDamageBonusImpl
 import MoveSpeedBonusImpl
+import BonusUserSpecified
 
-@configurable constant BASEDAMAGE     = new BonusSettings("Damage")
-@configurable constant DAMAGE         = new BonusSettings("Damage", 2048)
-@configurable constant ATTACKSPEED    = new BonusSettings("Attack speed", 512)
-@configurable constant ARMOR          = new BonusSettings("Armor", 256)
-@configurable constant HP             = new BonusSettings("HP", 16384)
-@configurable constant MP             = new BonusSettings("MP", 16384)
-@configurable constant STR            = new BonusSettings("Strength")
-@configurable constant AGI            = new BonusSettings("Agility")
-@configurable constant INT            = new BonusSettings("Intelligence")
-@configurable constant STRBASE        = new BonusSettings("Base strength")
-@configurable constant AGIBASE        = new BonusSettings("Base agility")
-@configurable constant INTBASE        = new BonusSettings("Base intelligence")
-@configurable constant HPREGEN        = new BonusSettings("HP regeneration", 256)
-@configurable constant MPREGEN        = new BonusSettings("MP regeneration", 256)
-@configurable constant HPREGENPERCENT = new BonusSettings("%HP regeneration", 4096)
-@configurable constant MPREGENPERCENT = new BonusSettings("%MP regeneration", 4096)
-@configurable constant MOVESPEED      = new BonusSettings("Move speed", 0, 525, 5)
+/*  
+	Do not directly edit this file!
+	If you want to change settings contained in this file, you should instead
+	create a BonusImpl_config.wurst file.
+	If you want to add completely new bonuses that can be accessed by 
+	"BONUS.", then you should copy the BonusUserSpecified file to your project,
+	and edit it to fit your needs. 
+	If you want to create private bonuses that are not indexed in "BONUS.",
+	just create them on the fly and associate them with any objects you want.
+*/
+@configurable constant DAMAGE         	  = new BonusSettings("Damage", 2048)
+@configurable constant ATTACK_SPEED       = new BonusSettings("Attack speed", 512)
+@configurable constant ARMOR          	  = new BonusSettings("Armor", 256)
+@configurable constant HP             	  = new BonusSettings("HP", 16384)
+@configurable constant MP             	  = new BonusSettings("MP", 16384)
+@configurable constant STRENGTH     	  = new BonusSettings("Strength")
+@configurable constant AGILITY 		      = new BonusSettings("Agility")
+@configurable constant INTELLIGENCE       = new BonusSettings("Intelligence")
+@configurable constant STRENGTH_BASE      = new BonusSettings("Base strength")
+@configurable constant AGILITY_BASE       = new BonusSettings("Base agility")
+@configurable constant INTELLIGENCE_BASE  = new BonusSettings("Base intelligence")
+@configurable constant HP_REGEN           = new BonusSettings("HP regeneration", 256)
+@configurable constant MP_REGEN           = new BonusSettings("MP regeneration", 256)
+@configurable constant HP_REGEN_PERCENT   = new BonusSettings("%HP regeneration", 4096)
+@configurable constant MP_REGEN_PERCENT   = new BonusSettings("%MP regeneration", 4096)
+@configurable constant MOVE_SPEED         = new BonusSettings("Move speed", 0, 525, 5)
+@configurable constant DAMAGE_BASE        = new BonusSettings("Damage")
 
+public class BonusNotImpl extends Bonus
+	construct(string name)
+		super(name)
 
-init
-    initialize()
+		changeClosure = (unit _u, int _current, int _val) -> begin
+			Log.error("Attempted use of Bonus \"" + name + "\" but it is not implemented!")
+		end
+
+function notImpl(string name) returns Bonus
+	return new BonusNotImpl(name)
+
+public constant BONUS = new BonusesClass()
 
 @compiletime function initialize()
-	if DAMAGE.doImpl
-		Bonus.Damage.setImplementation(new ExponentialAbilityBonus(
-		DAMAGE.name, DAMAGE.min, DAMAGE.max, (int id, int val) -> begin
+	if BONUS != null	
+init
+	initialize()
+
+class BonusesClass extends BonusUserSpecified
+
+	constant damage = not DAMAGE.doImpl ? notImpl(DAMAGE.name) :
+		new ExponentialAbilityBonus(DAMAGE.name, DAMAGE.min, DAMAGE.max, (int id, int val) -> begin
 			new AbilityDefinitionAttackBonusPlus1(id)..setAttackBonus(1, val)
-		end))
+		end)
 
-	if ATTACKSPEED.doImpl
-		Bonus.AttackSpeed.setImplementation(new ExponentialAbilityBonus(
-		ATTACKSPEED.name, ATTACKSPEED.min, ATTACKSPEED.max, (int id, int val) -> begin
+	constant attackSpeed = not ATTACK_SPEED.doImpl ? notImpl(ATTACK_SPEED.name) :
+		new ExponentialAbilityBonus(ATTACK_SPEED.name, ATTACK_SPEED.min, ATTACK_SPEED.max, (int id, int val) -> begin
 			new AbilityDefinitionAttackSpeedIncrease(id)..setAttackSpeedIncrease(1, val * 0.01)
-		end))
+		end)
 
-	if ARMOR.doImpl
-		Bonus.Armor.setImplementation(new ExponentialAbilityBonus(
-		ARMOR.name, ARMOR.min, ARMOR.max, (int id, int val) -> begin
+	constant armor = not ARMOR.doImpl ? notImpl(ARMOR.name) :
+		new ExponentialAbilityBonus(ARMOR.name, ARMOR.min, ARMOR.max, (int id, int val) -> begin
 			new AbilityDefinitionDefenseBonusPlus1(id)..setDefenseBonus(1, val)
-		end))
+		end)
 
-	if HP.doImpl
-		Bonus.HP.setImplementation(new ExponentialAbilityBonus(
-		HP.name, HP.min, HP.max, (int id, int val) -> begin
+	constant hp = not HP.doImpl ? notImpl(HP.name) :
+		new ExponentialAbilityBonus(HP.name, HP.min, HP.max, (int id, int val) -> begin
 			new AbilityDefinitionMaxLifeBonusGreater(id)..setMaxLifeGained(1, val)
-		end))
+		end)
 
-	if MP.doImpl
-		Bonus.MP.setImplementation(new ExponentialAbilityBonus(
-		MP.name, MP.min, MP.max, (int id, int val) -> begin
+	constant mp = not MP.doImpl ? notImpl(MP.name) :
+		new ExponentialAbilityBonus(MP.name, MP.min, MP.max, (int id, int val) -> begin
 			new AbilityDefinitionMaxManaBonusMost(id)..setMaxManaGained(1, val)
-		end))
+		end)
 	
-	if STR.doImpl
-		Bonus.STR.setImplementation(new CodeBonus(
-		STR.name, STR.min, STR.max, (unit u, int _current, int bonus) -> begin
+	constant strength = not STRENGTH.doImpl ? notImpl(STRENGTH.name) :
+		new CodeBonus(STRENGTH.name, STRENGTH.min, STRENGTH.max, (unit u, int _current, int bonus) -> begin
 			SetHeroStr(u, GetHeroStr(u, true) + bonus, false)
-		end))
+		end)
 
-	if AGI.doImpl
-		Bonus.AGI.setImplementation(new CodeBonus(
-		AGI.name, AGI.min, AGI.max, (unit u, int _current, int bonus) -> begin
+	constant agility = not AGILITY.doImpl ? notImpl(AGILITY.name) :
+		new CodeBonus(AGILITY.name, AGILITY.min, AGILITY.max, (unit u, int _current, int bonus) -> begin
 			SetHeroAgi(u, GetHeroAgi(u, true) + bonus, false)
-		end))
+		end)
 
-	if INT.doImpl
-		Bonus.INT.setImplementation(new CodeBonus(
-		INT.name, INT.min, INT.max, (unit u, int _current, int bonus) -> begin
+	constant intelligence = not INTELLIGENCE.doImpl ? notImpl(INTELLIGENCE.name) :
+		new CodeBonus(INTELLIGENCE.name, INTELLIGENCE.min, INTELLIGENCE.max, (unit u, int _current, int bonus) -> begin
 			SetHeroInt(u, GetHeroInt(u, true) + bonus, false)
-		end))
+		end)
 
-	if STRBASE.doImpl
-		Bonus.STRBase.setImplementation(new CodeBonus(
-		STRBASE.name, STRBASE.min, STRBASE.max, (unit u, int _current, int bonus) -> begin
+	constant strengthBase = not STRENGTH_BASE.doImpl ? notImpl(STRENGTH_BASE.name) : 
+		new CodeBonus(STRENGTH_BASE.name, STRENGTH_BASE.min, STRENGTH_BASE.max, (unit u, int _current, int bonus) -> begin
 			SetHeroStr(u, GetHeroStr(u, false) + bonus, true)
-		end))
+		end)
 
-	if AGIBASE.doImpl
-		Bonus.AGIBase.setImplementation(new CodeBonus(
-		AGIBASE.name, AGIBASE.min, AGIBASE.max, (unit u, int _current, int bonus) -> begin
+	constant agilityBase = not AGILITY_BASE.doImpl ? notImpl(AGILITY_BASE.name) :
+		new CodeBonus(AGILITY_BASE.name, AGILITY_BASE.min, AGILITY_BASE.max, (unit u, int _current, int bonus) -> begin
 			SetHeroAgi(u, GetHeroAgi(u, false) + bonus, true)
-		end))
+		end)
 
-	if INTBASE.doImpl
-		Bonus.INTBase.setImplementation(new CodeBonus(
-		INTBASE.name, INTBASE.min, INTBASE.max, (unit u, int _current, int bonus) -> begin
+	constant intBase = not INTELLIGENCE_BASE.doImpl ? notImpl(INTELLIGENCE_BASE.name) :
+		new CodeBonus(INTELLIGENCE_BASE.name, INTELLIGENCE_BASE.min, INTELLIGENCE_BASE.max, (unit u, int _current, int bonus) -> begin
 			SetHeroInt(u, GetHeroInt(u, false) + bonus, true)
-		end))
+		end)
 
-	if HPREGEN.doImpl
-		Bonus.HPRegen.setImplementation(new ExponentialAbilityBonus(
-		HPREGEN.name, HPREGEN.min, HPREGEN.max, (int id, int val) -> begin
+	constant hpRegen = not HP_REGEN.doImpl ? notImpl(HP_REGEN.name) :
+		new ExponentialAbilityBonus(HP_REGEN.name, HP_REGEN.min, HP_REGEN.max, (int id, int val) -> begin
 			new AbilityDefinitionRegenLifeArll(id)..setHitPointsRegeneratedPerSecond(1, val)
-		end))
+		end)
 
-	if MPREGEN.doImpl
-		Bonus.MPRegen.setImplementation(new ExponentialAbilityBonus(
-		MPREGEN.name, MPREGEN.min, MPREGEN.max, (int id, int val) -> begin
+	constant mpRegen = not MP_REGEN.doImpl ? notImpl(MP_REGEN.name) :
+		new ExponentialAbilityBonus(MP_REGEN.name, MP_REGEN.min, MP_REGEN.max, (int id, int val) -> begin
 			new AbilityDefinitionNeutralRegenmanaonly(id)
 				..setPercentage(1, false)
 				..setAreaofEffect(1, 1)
 				..setTargetsAllowed(1, "self")
 				..setAmountRegenerated(1, val * 1.)
-		end))
+		end)
 
-	if HPREGENPERCENT.doImpl
-		Bonus.HPRegenPercent.setImplementation(new ExponentialAbilityBonus(
-		HPREGENPERCENT.name, HPREGENPERCENT.min, HPREGENPERCENT.max, (int id, int val) -> begin
+	constant hpRegenPercent = not HP_REGEN_PERCENT.doImpl ? notImpl(HP_REGEN_PERCENT.name) :
+		new ExponentialAbilityBonus(HP_REGEN_PERCENT.name, HP_REGEN_PERCENT.min, HP_REGEN_PERCENT.max, (int id, int val) -> begin
 			new AbilityDefinitionNeutralRegenmanaonly(id)
 				..setPercentage(1, true)
 				..setAreaofEffect(1, 1)
 				..setTargetsAllowed(1, "self")
 				..setAmountRegenerated(1, val * 1.)
-		end))
+		end)
 
-	if MPREGENPERCENT.doImpl
-		Bonus.MPRegenPercent.setImplementation(new ExponentialAbilityBonus(
-		MPREGENPERCENT.name, MPREGENPERCENT.min, MPREGENPERCENT.max, (int id, int val) -> begin
+	constant mpRegenPercent = not MP_REGEN_PERCENT.doImpl ? notImpl(MP_REGEN_PERCENT.name) :
+		new ExponentialAbilityBonus(MP_REGEN_PERCENT.name, MP_REGEN_PERCENT.min, MP_REGEN_PERCENT.max, (int id, int val) -> begin
 			new AbilityDefinitionItemRegenMana(id)..setManaRegenerationBonusasfractionofnormal(1, val * 0.01)
-		end))
+		end)
 
-	if BASEDAMAGE.doImpl
-		Bonus.BaseDamage.setImplementation(new BaseDamageBonus(BASEDAMAGE.name))
+	constant damageBase = not DAMAGE_BASE.doImpl ? notImpl(DAMAGE_BASE.name) :
+		new BaseDamageBonus(DAMAGE_BASE.name)
 
-	if MOVESPEED.doImpl
-		Bonus.MoveSpeed.setImplementation(new MoveSpeedBonus(MOVESPEED.name, MOVESPEED.min, MOVESPEED.max, MOVESPEED.resolution))
-		//Bonus.MoveSpeed
-    /* Nonconfigurable extra bonuses */
-/*
-    Bonus.Bash.setImplementation(new AbilityLevelBonus("% Bash", 20, true, false,
-        new AbilityDefinitionBashcreep(BONUS_ID_GEN.next())
-            ..presetChancetoBash((int lvl) -> lvl * 0.05)))
-
-    Bonus.Evasion.setImplementation(new AbilityLevelBonus("% Evasion", 20, true, false,
-        new AbilityDefinitionEvasioncreep(BONUS_ID_GEN.next())
-            ..presetChancetoEvade((int lvl) -> lvl * 0.05)))
-
-    Bonus.Crit2x.setImplementation(new AbilityLevelBonus("chance of 2x critical strike", 10, true, false, 
-        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
-            ..setLevels(10)
-            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
-            ..presetDamageMultiplier((int _lvl) -> 2)))
-
-    Bonus.Crit3x.setImplementation(new AbilityLevelBonus("chance of 3x critical strike", 10, true, false, 
-        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
-            ..setLevels(10)
-            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
-            ..presetDamageMultiplier((int _lvl) -> 3)))
-
-    Bonus.Crit4x.setImplementation(new AbilityLevelBonus("chance of 4x critical strike", 10, true, false, 
-        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
-            ..setLevels(10)
-            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
-            ..presetDamageMultiplier((int _lvl) -> 4)))
-
-    Bonus.Crit5x.setImplementation(new AbilityLevelBonus("chance of 5x critical strike", 10, true, false, 
-        new AbilityDefinitionCriticalStrikecreep(BONUS_ID_GEN.next())
-            ..setLevels(10)
-            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
-            ..presetDamageMultiplier((int _lvl) -> 5)))
-*/
+	constant moveSpeed = not MOVE_SPEED.doImpl ? notImpl(MOVE_SPEED.name) :
+		new MoveSpeedBonus(MOVE_SPEED.name, MOVE_SPEED.min, MOVE_SPEED.max, MOVE_SPEED.resolution)

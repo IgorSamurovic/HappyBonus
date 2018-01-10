@@ -1,8 +1,6 @@
 package ItemBonus
 import Bonus
-import BonusTypes
 import RegisterEvents
-import UnitBonus
 
 constant objdataBonus = new BonusMap<bonusData>
 
@@ -17,19 +15,13 @@ public function bonusDataFromIndex(int id) returns bonusData
 public function bonusData.getBonusMap() returns BonusMap<bonusData>
     return objdataBonus.of(this)
 
-public function bonusData.getBonus(BonusBase typ) returns int
+public function bonusData.getBonus(Bonus typ) returns int
     return this.getBonusMap().get(typ)
 
 public function bonusData.addBonus(Bonus typ, int val)
-    this.addBonus(typ.getImplementation(), val)
-
-public function bonusData.removeBonus(Bonus typ, int val)
-    this.removeBonus(typ.getImplementation(), val)
-
-public function bonusData.addBonus(BonusBase typ, int val)
     this.getBonusMap().add(typ, val)
 
-public function bonusData.removeBonus(BonusBase typ, int val)
+public function bonusData.removeBonus(Bonus typ, int val)
     this.getBonusMap().remove(typ, val)
 
 function unit.addItemBonuses(item i)

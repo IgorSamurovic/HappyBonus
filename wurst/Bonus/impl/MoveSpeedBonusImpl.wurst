@@ -5,7 +5,7 @@ import OnUnitEnterLeave
 import UnitBonus
 
 int minSpeed = 0
-BonusBase thisBonus
+Bonus thisBonus
 
 public class MoveSpeedBonus extends AbilityLevelBonus
 
@@ -18,7 +18,7 @@ public class MoveSpeedBonus extends AbilityLevelBonus
         setBonusToLevel(resolution)
 
         let levels = (max - min) div bonusToLevel
-        this.abilId = new AbilityDefinitionMoveSpeedBonus(BONUS_ID_GEN.next())
+        this.abilId = new AbilityDefinitionMoveSpeedBonus(Bonus.generateId())
             ..setLevels(levels)
             ..presetMovementSpeedBonus((int lvl) -> min + (lvl - 1) * bonusToLevel)
         .getNewId()

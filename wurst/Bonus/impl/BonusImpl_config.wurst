@@ -1,5 +1,0 @@
-package BonusImpl_config
-//import Bonus
-/*
-@config constant ARMOR = new BonusSettings("Damage", 1024)
-@config constant ATTACKSPEED = new BonusSettings("AttackSpeed", 1024)*/

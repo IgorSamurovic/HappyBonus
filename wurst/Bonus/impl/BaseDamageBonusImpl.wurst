@@ -4,7 +4,7 @@ import ItemObjEditing
 import Bonus
 import ObjectIds
 
-public class BaseDamageBonus extends BonusBase
+public class BaseDamageBonus extends Bonus
     static constant testAbil = 'AInv'
     static int array bonusVal = [100, 10, 1, -100, -10, -1]
     static int array bonusAbilId
@@ -26,12 +26,12 @@ public class BaseDamageBonus extends BonusBase
 
         var i = 0
         while (bonusVal[i] != 0)
-            let abilId = BONUS_ID_GEN.next()
+            let abilId = Bonus.generateId()
             bonusAbilId[abilId] = abilId
             new AbilityDefinitionAttackMod(abilId)
                 ..setAttackModification(1, bonusVal[i])
                 ..setArtCaster("")
-            let itemId = BONUS_ID_GEN.next()
+            let itemId = Bonus.generateId()
             bonusAbilId[itemId] = itemId
             new ItemDefinition(itemId, 'tkno')
                 ..setAbilities(int2fourchar(abilId))

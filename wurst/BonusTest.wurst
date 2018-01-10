@@ -1,31 +1,30 @@
 package BonusTest
 import Bonus
-import BonusTypes
-import UnitBonus
 import ItemBonus
 import ClosureTimers
+import HashMap
 
 init
     let g = CreateGroup()
     let u = createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
     let w = createUnit(Player(0), 'hpea', vec2(0, 0), angle(0))
     let f = createUnit(Player(0), 'hfoo', vec2(0, 0), angle(0))
-
-    w.addBonus(Bonus.BaseDamage, 100)
-    f.addBonus(Bonus.BaseDamage, 100)
+	new HashMap<real, real>
+    w.addBonus(BONUS.damageBase, 100)
+    f.addBonus(BONUS.damageBase, 100)
     createUnit(Player(0), 'Hpal', vec2(0, 0), angle(0))
     g.addUnit(u)
 
     bonusData('I000')
-    ..addBonus(Bonus.BaseDamage, 10)
-	..addBonus(Bonus.AttackSpeed, 100)
-	..addBonus(Bonus.MoveSpeed, 100)
-
-    ..addBonus(Bonus.AGI, 100)
-    ..addBonus(Bonus.MPRegen, 1)
-
-    u.addBonus(Bonus.Damage, -256)
-    u.addBonus(Bonus.Armor, -256)
+    ..addBonus(BONUS.damageBase, 10)
+	..addBonus(BONUS.attackSpeed, 100)
+	..addBonus(BONUS.bash1sec, 5)
+    ..addBonus(BONUS.agility, 100)
+    ..addBonus(BONUS.agilityBase, 15)
+	..addBonus(BONUS.moveSpeed, 50)
+	
+    u.addBonus(BONUS.damage, -256)
+    u.addBonus(BONUS.armor, -256)
 
 	doPeriodically(1, (CallbackPeriodic _cb) -> begin 
 		print(u.getMoveSpeed())

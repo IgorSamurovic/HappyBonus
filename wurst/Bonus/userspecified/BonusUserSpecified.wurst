@@ -1,0 +1,44 @@
+package BonusUserSpecified
+import Bonus
+import AbilityObjEditing
+
+public class BonusUserSpecified
+	constant bash1sec = new AbilityLevelBonus("% 1s Bash", 20, true, false,
+        new AbilityDefinitionBashcreep(Bonus.generateId())
+			..presetChancetoBash((int lvl) -> lvl * 5.)
+			..presetDurationHero((int _lvl) -> 1)
+			..presetDurationNormal((int _lvl) -> 1))
+
+	constant bash2sec = new AbilityLevelBonus("% 2s Bash", 20, true, false,
+		new AbilityDefinitionBashcreep(Bonus.generateId())
+			..presetChancetoBash((int lvl) -> lvl * 5.)
+			..presetDurationHero((int _lvl) -> 2)
+			..presetDurationNormal((int _lvl) -> 2))
+
+    constant evasion = new AbilityLevelBonus("% Evasion", 20, true, false,
+        new AbilityDefinitionEvasioncreep(Bonus.generateId())
+            ..presetChancetoEvade((int lvl) -> lvl * 0.05))
+
+    constant crit2x = new AbilityLevelBonus("chance of 2x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 2))
+
+	constant crit3x = new AbilityLevelBonus("chance of 3x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 3))
+
+    constant crit4x = new AbilityLevelBonus("chance of 4x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+			..presetDamageMultiplier((int _lvl) -> 4))
+			
+	constant crit5x = new AbilityLevelBonus("chance of 5x critical strike", 10, true, false, 
+        new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
+            ..setLevels(10)
+            ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
+            ..presetDamageMultiplier((int _lvl) -> 5))

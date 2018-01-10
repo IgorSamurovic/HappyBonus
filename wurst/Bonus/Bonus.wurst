@@ -1,52 +1,74 @@
 package Bonus
-import HashMap
-import initlater BonusTypes
+/*  By HappyTauren */
+/* 
+	Welcome to the Bonus package!
+
+	The purpose of this package is to create a framework in which you can easily create bonuses based on
+	some basic unit stats. Those include, but are not limited to, damage, armor, str/agi/int attributes,
+	hit points, mana, attack and move speed. Instead of creating a new ability or coding every addition
+	to the unit's stats by hand, this system offers those functionalities in one line of code, whenever
+	Bonus is imported.
+	
+	It's as easy as this...										...but it is just as easy to take it back!
+
+		someUnit.addBonus(BONUS.damage, 5)	 						someUnit.removeBonus(BONUS.damage, 5) 
+
+	
+*/
+import public initlater BonusImpl
 import ObjectIdGenerator
 import AbilityObjEditing
+import HashMap
+import UnitIndexer
+
+/* Unit API */
+
+/** This instance is the replacement for static access to the <T>emplated class */
+constant unitBonus = new BonusMap<unit>
+
+/** Returns the map that contains all values of all bonuses applied to this unit,
+ indexed by their Bonus object */
+public function unit.getBonusMap() returns BonusMap<unit>
+    return unitBonus.of(this)
+
+/** Returns the int value of a specific bonus for this unit */
+public function unit.getBonus(Bonus typ) returns int
+    return this.getBonusMap().get(typ)
+
+/** Adds an amount of a bonus to the unit, running a closure associated with it */ 
+public function unit.addBonus(Bonus typ, int val)
+    let map = this.getBonusMap()
+    let current = map.get(typ)
+    //print("[" + typ.getName() + "] Current: " + current.toString() + " Added: " + val.toString())
+    typ.change(this, current, val)
+    map.add(typ, val)
+	
+/** Removes an amount of a bonus of this unit */
+public function unit.removeBonus(Bonus typ, int val)
+    this.addBonus(typ, -val)
+	
+init/* Destroy the associated bonus map once the unit is deindexed */ 
+    onUnitDeindex(() -> destroy getDeindexedUnit().getBonusMap())
+
 
 /* This is the main API package used for Bonus. Do not import any other file in this folder! */
 
-/** In order to avoid ID clashes, use this ID generator for every object generated for this system */
-public constant BONUS_ID_GEN = new IdGenerator('xx00')
-
-BonusBase array impl
-
-/** Returns an implementation of this bonus type */
-public function Bonus.getImplementation() returns BonusBase
-    let retVal = impl[this castTo int]
-    if retVal == null
-        Log.error("Bonus with ID " + this castTo int.toString() + " not implemented!")
-    return retVal
-
-/** Sets the implementation for this bonus type */
-public function Bonus.setImplementation(BonusBase typ)
-    if typ != null
-        let id = this castTo int
-        if impl[id] == null
-            impl[id] = typ
-        else
-            Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
-
-/** Sets the implementation for this bonus type if doImpl is true */
-public function Bonus.setImplementation(bool doImpl, BonusBase typ)
-    if doImpl
-        let id = this castTo int
-        if impl[id] == null
-            impl[id] = typ
-        else
-            Log.error("Attempt to implement the bonus \"" + impl[id].getName() + "\" twice!")
-
+/** Instances of this class are used to define whether a Bonus is going to be generated at all,
+what its name and tooltip strings are */
 public class BonusSettings
+	/** Use this constant setings object to stop a bonus from generating */
     static constant none = new BonusSettings()..dontImpl()
-    string name
+	
+	/* Data */
+	string name
     int min
 	int max
 	int resolution = 1
     bool doImpl = true
 
     function dontImpl()
-        doImpl = false
-
+		doImpl = false
+		
 	construct(string name, int min, int max, int resolution)
         this.name = name
         this.min = min
@@ -71,16 +93,16 @@ public class BonusSettings
     construct()
 
 public interface BonusMapI
-    function getMap() returns IterableMap<BonusBase, int>
+    function getMap() returns IterableMap<Bonus, int>
     function add(BonusMapI that)
     function remove(BonusMapI that)
 
 public class BonusMap<T> implements BonusMapI
-    protected IterableMap<BonusBase, int> bonusMap
+    protected IterableMap<Bonus, int> bonusMap
     protected HashMap<T, thistype> instanceMap
     protected T mapRef
 
-    function getMap() returns IterableMap<BonusBase, int>
+    function getMap() returns IterableMap<Bonus, int>
         return bonusMap
 
     function add(BonusMapI that)
@@ -95,28 +117,17 @@ public class BonusMap<T> implements BonusMapI
             remove(bonus, map.get(bonus))
             //print(bonus.getName() + " " + map.get(bonus).toString())
 
-    function add(Bonus bonusId, int val)
-        let typ = bonusId.getImplementation()
-        if typ != null
-            add(typ, val)
-
-    function add(BonusBase typ, int val)
+    function add(Bonus typ, int val)
         if typ != null and val != 0
             let current = bonusMap.get(typ)
             bonusMap.put(typ, current + val)
 
-    function remove(Bonus bonusId, int val)
-        add(bonusId, -val)
-
-    function remove(BonusBase typ, int val)
+    function remove(Bonus typ, int val)
         add(typ, -val)
 
     /** Returns a value of the given bonus */
-    function get(BonusBase typ) returns int
+    function get(Bonus typ) returns int
         return bonusMap.get(typ)
-
-    function get(Bonus baseId) returns int
-        return bonusMap.get(baseId.getImplementation())
 
     /** Returns the Bonuses instance associated with the given unit */
     function of(T t) returns BonusMap<T>
@@ -134,7 +145,7 @@ public class BonusMap<T> implements BonusMapI
     /** Creates a bonus map that's attached to an object of type T */
     construct(T t)
         mapRef = t
-        bonusMap = new IterableMap<BonusBase, int>
+        bonusMap = new IterableMap<Bonus, int>
         (1 castTo thistype).instanceMap.put(t, this)
 
     ondestroy
@@ -143,15 +154,20 @@ public class BonusMap<T> implements BonusMapI
             instanceMap.remove(mapRef)
 
 /** This closure is executed every time a bonus is changed */
-public interface BonusBaseChangeClosure
+public interface BonusChangeClosure
     function run(unit u, int current, int bonus)
 
 /** Every bonus type the user wants to add to the system must extend this class */
-public abstract class BonusBase
+public abstract class Bonus
+	protected static constant ID_GEN = new IdGenerator('xx00')
+	
+	static function generateId() returns int
+		return generateId()
+
     protected string name
     protected int minBonus = 0
     protected int maxBonus = 1
-    protected BonusBaseChangeClosure changeClosure
+    protected BonusChangeClosure changeClosure
 
     function getName() returns string
         return name
@@ -164,7 +180,7 @@ public abstract class BonusBase
     protected function setMaxBonus(int val)
         maxBonus = max(1, val)
 
-    protected function setChangeClosure(BonusBaseChangeClosure val)
+    protected function setChangeClosure(BonusChangeClosure val)
         changeClosure = val
 
     /** Clamps the value to be within limits set in minBonus and maxBonus fields */
@@ -190,7 +206,7 @@ interface ExponentialAbilityBonusClosure
 
 /** Ability bonus that relies on having positive exponential increments (2, 4, 8, etc)
 and one negative decrement */
-public class ExponentialAbilityBonus extends BonusBase
+public class ExponentialAbilityBonus extends Bonus
     protected static int array pow2 = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
                                        65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608]
     protected int maxPower
@@ -234,12 +250,12 @@ public class ExponentialAbilityBonus extends BonusBase
         this.minBonus = min(0, min)
 
         for power = 0 to maxPower
-            let id = BONUS_ID_GEN.next()
+            let id = generateId()
             abils[power] = id
             processFunction.run(id, pow2[power])
 
         if min < 0
-            abilNegative = BONUS_ID_GEN.next()
+            abilNegative = generateId()
             processFunction.run(abilNegative, -pow2[maxPower])
 
         /* Define the change function */
@@ -272,14 +288,10 @@ public class ExponentialAbilityBonus extends BonusBase
     construct(string name, int min, int max, ExponentialAbilityBonusClosure processFunction)
         super(name)
         constructor(min, max, processFunction)
-       
-    construct(BonusSettings settings, ExponentialAbilityBonusClosure processFunction)
-        super(settings.name)
-        constructor(settings.min, settings.max, processFunction)
 
 /* Ability Level Bonus */
 
-public class AbilityLevelBonus extends BonusBase
+public class AbilityLevelBonus extends Bonus
     protected int abilId
     protected int bonusToLevel = 1
     protected bool forceAdd = false
@@ -346,15 +358,15 @@ public class AbilityBonus extends AbilityLevelBonus
 /** This type of Bonus depends on the user specifying a closure to be ran when the bonus is
 increased or decreased.
 Example: Attribute (STR/AGI/INT) bonuses use this feature in the default implementation. */
-public class CodeBonus extends BonusBase
+public class CodeBonus extends Bonus
 
-    construct(string name, int min, int max, BonusBaseChangeClosure changeClosure)
+    construct(string name, int min, int max, BonusChangeClosure changeClosure)
         super(name)
         setMinBonus(min)
         setMaxBonus(max)
         setChangeClosure(changeClosure)
         
-    construct(BonusSettings bs, BonusBaseChangeClosure changeClosure)
+    construct(BonusSettings bs, BonusChangeClosure changeClosure)
         super(bs.name)
         setMinBonus(bs.min)
         setMaxBonus(bs.max)
