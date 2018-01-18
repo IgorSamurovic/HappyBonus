@@ -1,19 +1,19 @@
 package Bonus
 /*  By HappyTauren */
 /* 
-	Welcome to the Bonus package!
+    Welcome to the Bonus package!
 
-	The purpose of this package is to create a framework in which you can easily create bonuses based on
-	some basic unit stats. Those include, but are not limited to, damage, armor, str/agi/int attributes,
-	hit points, mana, attack and move speed. Instead of creating a new ability or coding every addition
-	to the unit's stats by hand, this system offers those functionalities in one line of code, whenever
-	Bonus is imported.
-	
-	It's as easy as this...										...but it is just as easy to take it back!
+    The purpose of this package is to create a framework in which you can easily create bonuses based on
+    some basic unit stats. Those include, but are not limited to, damage, armor, str/agi/int attributes,
+    hit points, mana, attack and move speed. Instead of creating a new ability or coding every addition
+    to the unit's stats by hand, this system offers those functionalities in one line of code, whenever
+    Bonus is imported.
+    
+    It's as easy as this...										...but it is just as easy to take it back!
 
-		someUnit.addBonus(BONUS.damage, 5)	 						someUnit.removeBonus(BONUS.damage, 5) 
+        someUnit.addBonus(BONUS.damage, 5)	 						someUnit.removeBonus(BONUS.damage, 5) 
 
-	
+    
 */
 import public initlater BonusImpl
 import ObjectIdGenerator
@@ -42,11 +42,11 @@ public function unit.addBonus(Bonus typ, int val)
     //print("[" + typ.getName() + "] Current: " + current.toString() + " Added: " + val.toString())
     typ.change(this, current, val)
     map.add(typ, val)
-	
+    
 /** Removes an amount of a bonus of this unit */
 public function unit.removeBonus(Bonus typ, int val)
     this.addBonus(typ, -val)
-	
+    
 init/* Destroy the associated bonus map once the unit is deindexed */ 
     onUnitDeindex(() -> destroy getDeindexedUnit().getBonusMap())
 
@@ -56,24 +56,24 @@ init/* Destroy the associated bonus map once the unit is deindexed */
 /** Instances of this class are used to define whether a Bonus is going to be generated at all,
 what its name and tooltip strings are */
 public class BonusSettings
-	/** Use this constant setings object to stop a bonus from generating */
+    /** Use this constant setings object to stop a bonus from generating */
     static constant none = new BonusSettings()..dontImpl()
-	
-	/* Data */
-	string name
+    
+    /* Data */
+    string name
     int min
-	int max
-	int resolution = 1
+    int max
+    int resolution = 1
     bool doImpl = true
 
     function dontImpl()
-		doImpl = false
-		
-	construct(string name, int min, int max, int resolution)
+        doImpl = false
+        
+    construct(string name, int min, int max, int resolution)
         this.name = name
         this.min = min
         this.max = max
-		this.resolution = resolution
+        this.resolution = resolution
 
     construct(string name, int min, int max)
         this.name = name
@@ -85,11 +85,11 @@ public class BonusSettings
         this.min = -range
         this.max =  range
 
-	construct(string name)
-		this.name = name
-		this.min = -1000000
-		this.max =  1000000
-		
+    construct(string name)
+        this.name = name
+        this.min = -1000000
+        this.max =  1000000
+        
     construct()
 
 public interface BonusMapI
@@ -159,19 +159,39 @@ public interface BonusChangeClosure
 
 /** Every bonus type the user wants to add to the system must extend this class */
 public abstract class Bonus
-	protected static constant ID_GEN = new IdGenerator('xx00')
-	
-	static function generateId() returns int
-		return ID_GEN.next()
+    protected static constant ID_GEN = new IdGenerator('xx00')
+    
+    static function generateId() returns int
+        return ID_GEN.next()
 
     protected string name
+    protected bool percentual
     protected int minBonus = 0
     protected int maxBonus = 1
+    protected int bonusToLevel = 1
+    protected real multiplier = 1 
+
+    protected function setMulitplier(real val)
+        multiplier = val
+
+    /** Sets the number of points that get converted to one level. A setting of 5 means that for every 5 points
+    of the bonus, the unit gains one level of the ability.
+    This field is equal to 1 by default. */
+    protected function setBonusToLevel(int val)
+        bonusToLevel = val
+        
     protected BonusChangeClosure changeClosure
 
     function getName() returns string
         return name
 
+    // TODO
+    function getTooltip(int val) returns string
+        var str = "+"
+        if val < 0 
+            str = "-"
+        str += val.toString()
+        return str
     /** Sets the minimum bonus value to a nonpositive number */
     protected function setMinBonus(int val)
         minBonus = min(0, val)
@@ -293,17 +313,12 @@ public class ExponentialAbilityBonus extends Bonus
 
 public class AbilityLevelBonus extends Bonus
     protected int abilId
-    protected int bonusToLevel = 1
     protected bool forceAdd = false
 
     function getAbilId() returns int
         return abilId
 
-    /** Sets the number of points that get converted to one level. A setting of 5 means that for every 5 points
-    of the bonus, the unit gains one level of the ability.
-    This field is equal to 1 by default. */
-    protected function setBonusToLevel(int val)
-        bonusToLevel = val
+
 
     function constructor(int maxLevel, bool forceAdd, int abilId)
         setMinBonus(0)
@@ -323,8 +338,8 @@ public class AbilityLevelBonus extends Bonus
                 u.removeAbility(abilId)
         end
 
-	construct(string name)
-		super(name)
+    construct(string name)
+        super(name)
 
     construct(string name, int maxLevel, bool forceAdd, int abilId)
         super(name)

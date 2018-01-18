@@ -3,19 +3,19 @@ import Bonus
 import AbilityObjEditing
 
 public class BonusUserSpecified
-	constant bash1sec = new AbilityLevelBonus("% 1s Bash", 20, true, false,
+    constant bash1sec = new AbilityLevelBonus("% 1s Bash", 20, true, false,
         new AbilityDefinitionBashcreep(Bonus.generateId())
-			..setLevels(20)	
-			..presetChancetoBash((int lvl) -> lvl * 5.)
-			..presetDurationHero((int _lvl) -> 1)
-			..presetDurationNormal((int _lvl) -> 1))
+            ..setLevels(20)	
+            ..presetChancetoBash((int lvl) -> lvl * 5.)
+            ..presetDurationHero((int _lvl) -> 1)
+            ..presetDurationNormal((int _lvl) -> 1))
 
-	constant bash2sec = new AbilityLevelBonus("% 2s Bash", 20, true, false,
-		new AbilityDefinitionBashcreep(Bonus.generateId())
-			..setLevels(20)
-			..presetChancetoBash((int lvl) -> lvl * 5.)
-			..presetDurationHero((int _lvl) -> 2)
-			..presetDurationNormal((int _lvl) -> 2))
+    constant bash2sec = new AbilityLevelBonus("% 2s Bash", 20, true, false,
+        new AbilityDefinitionBashcreep(Bonus.generateId())
+            ..setLevels(20)
+            ..presetChancetoBash((int lvl) -> lvl * 5.)
+            ..presetDurationHero((int _lvl) -> 2)
+            ..presetDurationNormal((int _lvl) -> 2))
 
     constant evasion = new AbilityLevelBonus("% Evasion", 20, true, false,
         new AbilityDefinitionEvasioncreep(Bonus.generateId())
@@ -27,7 +27,7 @@ public class BonusUserSpecified
             ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
             ..presetDamageMultiplier((int _lvl) -> 2))
 
-	constant crit3x = new AbilityLevelBonus("chance of 3x critical strike", 10, true, false, 
+    constant crit3x = new AbilityLevelBonus("chance of 3x critical strike", 10, true, false, 
         new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
             ..setLevels(10)
             ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
@@ -37,9 +37,9 @@ public class BonusUserSpecified
         new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
             ..setLevels(10)
             ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)
-			..presetDamageMultiplier((int _lvl) -> 4))
-			
-	constant crit5x = new AbilityLevelBonus("chance of 5x critical strike", 10, true, false, 
+            ..presetDamageMultiplier((int _lvl) -> 4))
+            
+    constant crit5x = new AbilityLevelBonus("chance of 5x critical strike", 10, true, false, 
         new AbilityDefinitionCriticalStrikecreep(Bonus.generateId())
             ..setLevels(10)
             ..presetChancetoCriticalStrike((int lvl) -> lvl * 10.)

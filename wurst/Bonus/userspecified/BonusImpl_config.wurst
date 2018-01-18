@@ -1,4 +1,4 @@
 package BonusImpl_config
-import Bonus
+//import Bonus
 
 //@config constant DAMAGE = new BonusSettings("Damage", 1024)..dontImpl()
